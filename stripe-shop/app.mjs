@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import Stripe from 'stripe';
 
-const PUBLIC_BASE_URL = (process.env.PUBLIC_BASE_URL || '').trim();
 const APP_DEEPLINK_SCHEME = (process.env.APP_DEEPLINK_SCHEME || 'petrone').trim();
 const STRIPE_SECRET_KEY = (process.env.STRIPE_SECRET_KEY || '').trim();
 
@@ -10,11 +9,6 @@ if (!STRIPE_SECRET_KEY) {
   // eslint-disable-next-line no-console
   console.warn('[stripe-shop] Missing STRIPE_SECRET_KEY. /create-checkout-session will fail.');
 }
-if (!PUBLIC_BASE_URL) {
-  // eslint-disable-next-line no-console
-  console.warn('[stripe-shop] Missing PUBLIC_BASE_URL. Redirect pages may not work correctly.');
-}
-
 const stripe = new Stripe(STRIPE_SECRET_KEY || 'sk_test_dummy', {});
 
 const app = express();
@@ -52,10 +46,6 @@ app.post('/stripe-shop/create-checkout-session', express.json({ limit: '1mb' }),
       res.status(500).json({ error: 'server_misconfigured', detail: 'Missing STRIPE_SECRET_KEY' });
       return;
     }
-    if (!PUBLIC_BASE_URL) {
-      res.status(500).json({ error: 'server_misconfigured', detail: 'Missing PUBLIC_BASE_URL' });
-      return;
-    }
 
     const productId = req.body?.productId;
     if (productId !== 'black' && productId !== 'orange') {
@@ -64,8 +54,9 @@ app.post('/stripe-shop/create-checkout-session', express.json({ limit: '1mb' }),
     }
 
     const product = PRODUCTS[productId];
-    const successUrl = `${PUBLIC_BASE_URL}/stripe-shop/success?session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${PUBLIC_BASE_URL}/stripe-shop/cancel`;
+    // Redirect directly back to the app deep links after Checkout.
+    const successUrl = `${APP_DEEPLINK_SCHEME}://shop/success?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${APP_DEEPLINK_SCHEME}://shop/cancel`;
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
