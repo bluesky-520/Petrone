@@ -1,10 +1,10 @@
 {
   "version": 2,
   "functions": {
-    "api/index.mjs": {
-      "runtime": "@vercel/node"
+    "api/*.js": {
+      "runtime": "now-php@1.0.0"
     }
-  },
+  }
   "rewrites": [
     {
       "source": "/stripe-shop/(.*)",
