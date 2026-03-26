@@ -4,10 +4,15 @@ import Stripe from 'stripe';
 
 const APP_DEEPLINK_SCHEME = (process.env.APP_DEEPLINK_SCHEME || 'petrone').trim();
 const STRIPE_SECRET_KEY = (process.env.STRIPE_SECRET_KEY || '').trim();
+const SHIPPING_FEE_CENTS = parseInt(process.env.SHIPPING_FEE_CENTS || '800', 10);
 
 if (!STRIPE_SECRET_KEY) {
   // eslint-disable-next-line no-console
   console.warn('[stripe-shop] Missing STRIPE_SECRET_KEY. /create-checkout-session will fail.');
+}
+if (!Number.isFinite(SHIPPING_FEE_CENTS) || SHIPPING_FEE_CENTS < 0) {
+  // eslint-disable-next-line no-console
+  console.warn('[stripe-shop] Invalid SHIPPING_FEE_CENTS. Falling back to 800 cents.');
 }
 const stripe = new Stripe(STRIPE_SECRET_KEY || 'sk_test_dummy', {});
 
@@ -58,6 +63,10 @@ app.post('/stripe-shop/create-checkout-session', express.json({ limit: '1mb' }),
     const successUrl = `${APP_DEEPLINK_SCHEME}://shop/success?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${APP_DEEPLINK_SCHEME}://shop/cancel`;
 
+    const shippingAmountCents = Number.isFinite(SHIPPING_FEE_CENTS) && SHIPPING_FEE_CENTS >= 0
+      ? SHIPPING_FEE_CENTS
+      : 800;
+
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       success_url: successUrl,
@@ -70,7 +79,18 @@ app.post('/stripe-shop/create-checkout-session', express.json({ limit: '1mb' }),
             unit_amount: product.unitAmountCents,
             product_data: {
               name: product.productName,
-              description: 'UPS shipping included.',
+              description: 'Hat only.',
+            },
+          },
+        },
+        {
+          quantity: 1,
+          price_data: {
+            currency: 'usd',
+            unit_amount: shippingAmountCents,
+            product_data: {
+              name: 'Shipping',
+              description: 'UPS shipping fee.',
             },
           },
         },
