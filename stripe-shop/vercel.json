@@ -4,7 +4,7 @@
     "api/*.js": {
       "runtime": "now-php@1.0.0"
     }
-  }
+  },
   "rewrites": [
     {
       "source": "/stripe-shop/(.*)",
