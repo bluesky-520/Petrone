@@ -71,6 +71,9 @@ app.post('/stripe-shop/create-checkout-session', express.json({ limit: '1mb' }),
       mode: 'payment',
       success_url: successUrl,
       cancel_url: cancelUrl,
+      // Keep checkout options limited to card and Link.
+      // This prevents showing methods like Cash App Pay and Klarna.
+      payment_method_types: ['card', 'link'],
       line_items: [
         {
           quantity: 1,
