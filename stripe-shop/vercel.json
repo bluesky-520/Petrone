@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "functions": {
+    "api/index.mjs": {
+      "runtime": "@vercel/node"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/stripe-shop/(.*)",
+      "destination": "/api/index.mjs"
+    }
+  ]
+}
+
